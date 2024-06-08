@@ -1,1 +1,6 @@
-export { fetchAuthors, fetchAuthor } from "./Author.fetcher";
+export {
+  fetchAuthors,
+  fetchAuthor,
+  updateAuthor,
+  deleteAuthor,
+} from "./Author.fetcher";
