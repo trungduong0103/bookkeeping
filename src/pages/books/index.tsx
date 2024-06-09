@@ -10,5 +10,7 @@ export const getServerSideProps = async () => {
 export default function BooksPage({
   books,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  console.log(books);
+
   return <div>Hello World!</div>;
 }

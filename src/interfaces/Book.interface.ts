@@ -3,7 +3,7 @@ import type { Author } from "./Author.interface";
 interface Book {
   id: string;
   title: string;
-  authors: Author[];
+  authors: string[];
   publicationYear: number;
 }
 

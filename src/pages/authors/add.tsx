@@ -1,6 +1,7 @@
 import { object, string } from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { createAuthor } from "@/fetchers";
 import type { Author } from "@/interfaces";
 
 const authorSchema = object()
@@ -17,6 +18,7 @@ export default function AddAuthorPage() {
   });
 
   const onSubmit = async (data: Pick<Author, "fullName">) => {
+    await createAuthor(data.fullName);
     // TODO
     // await updateAuthor(author.id, { fullName: data.fullName });
     // const apiAuthor = await fetchAuthor(author.id);

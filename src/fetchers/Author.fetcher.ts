@@ -5,6 +5,22 @@ type TFetchAuthorsDTO = {
   data: Author[];
 };
 
+export const createAuthor = async (fullName: string): Promise<void> => {
+  try {
+    const response = await fetch(BASE_URL, {
+      method: "POST",
+      body: JSON.stringify({ fullName }),
+    });
+    if (!response.ok) {
+      return Promise.reject(response);
+    }
+    return;
+  } catch (err) {
+    console.error(err);
+    throw new Error("Error. Could not add Author.");
+  }
+};
+
 export const fetchAuthors = async (): Promise<Author[]> => {
   try {
     const response = await fetch(BASE_URL);

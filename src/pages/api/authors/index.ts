@@ -4,9 +4,9 @@ import { BOOKKEEPER_DATA } from "@/mock/data";
 
 const authorsData = BOOKKEEPER_DATA.authors;
 
-function handleGetAuthors(): Author[];
-function handleGetAuthors(id: string): Author | null;
-function handleGetAuthors(id?: string) {
+function getAuthors(): Author[];
+function getAuthors(id: string): Author | null;
+function getAuthors(id?: string) {
   // get all
   if (!id) return Array.from(authorsData.values());
   // get one
@@ -18,8 +18,14 @@ export default function handler(
   res: NextApiResponse<string>
 ) {
   if (req.method === "POST") {
-    // TODO;
-    authorsData.set(req.body.id, req.body);
+    const newId = crypto.randomUUID();
+    authorsData.set(newId, {
+      id: newId,
+      fullName: JSON.parse(req.body).fullName,
+      numberOfBooks: 0,
+      books: [],
+    });
+
     return res.status(200).send(
       JSON.stringify({
         message: "Author added",
@@ -32,7 +38,7 @@ export default function handler(
   if (req.method === "GET") {
     // get all
     if (!authorId) {
-      const authors = handleGetAuthors();
+      const authors = getAuthors();
       return res
         .status(200)
         .send(
@@ -40,7 +46,7 @@ export default function handler(
         );
     }
     // get one
-    const author = handleGetAuthors(authorId);
+    const author = getAuthors(authorId);
     return res.status(200).send(
       JSON.stringify({
         message: author ? "Get author success" : "Author is not found",
@@ -50,7 +56,7 @@ export default function handler(
   }
 
   if (req.method === "PATCH") {
-    const author = handleGetAuthors(authorId);
+    const author = getAuthors(authorId);
     if (!author) {
       return res
         .status(200)
@@ -58,12 +64,11 @@ export default function handler(
     }
 
     authorsData.set(authorId, { ...author, ...JSON.parse(req.body) });
-
     return res.status(200).send(JSON.stringify({ message: "Author updated" }));
   }
 
   if (req.method === "DELETE") {
-    const author = handleGetAuthors(authorId);
+    const author = getAuthors(authorId);
 
     if (!author) {
       return res
@@ -71,9 +76,7 @@ export default function handler(
         .send(JSON.stringify({ message: "Author is not found" }));
     }
 
-    const deleted = authorsData.delete(authorId);
-    console.log(authorsData, deleted, authorId);
-
+    authorsData.delete(authorId);
     return res.status(200).send(JSON.stringify({ message: "Author deleted" }));
   }
 }
