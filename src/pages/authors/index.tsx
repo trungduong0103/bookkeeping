@@ -6,6 +6,8 @@ import type {
 } from "next/types";
 import type { Author } from "@/interfaces";
 import { fetchAuthors, deleteAuthor } from "@/fetchers";
+import { Button } from "@/components/Button";
+import { TextInput } from "../../components/TextInput/TextInput";
 
 export const getServerSideProps = (async () => {
   const authors = await fetchAuthors();
@@ -30,10 +32,15 @@ export default function AuthorsPage({
 
   return (
     <>
-      <h1 className="prose prose-2xl">Authors</h1>
-      <button type="button">
-        <Link href={"authors/add"}>Add</Link>
-      </button>
+      <div className="flex flex-row justify-between items-center">
+        <h1 className="prose prose-2xl font-bold">Authors</h1>
+        <div>
+          <TextInput placeholder="Search for an author" />
+          <Link href="authors/add" className="ml-2">
+            <Button>+ Add New Author</Button>
+          </Link>
+        </div>
+      </div>
       <table>
         <thead>
           <tr>
@@ -51,12 +58,18 @@ export default function AuthorsPage({
               <td>{author.fullName}</td>
               <td>{author.numberOfBooks}</td>
               <td>
-                <Link href={`authors/${author.id}`}>Edit</Link>
+                <Link href={`authors/${author.id}`}>
+                  <Button variant="info">Edit</Button>
+                </Link>
               </td>
               <td>
-                <button onClick={() => handleClick(author.id)} type="button">
+                <Button
+                  variant="danger"
+                  onClick={() => handleClick(author.id)}
+                  type="button"
+                >
                   Delete
-                </button>
+                </Button>
               </td>
             </tr>
           ))}

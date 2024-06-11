@@ -2,22 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --color-black: #000000;
+    --color-lightBlue: #2264e5;
+    --color-darkBlue: #14213d;
+    --color-darkYellow: #fca311;
+    --color-grey: #e5e5e5;
+    --color-white: #ffffff;
+    --color-red: #d62828;
+  }
+}
+
 .mainLayout {
   display: flex;
   flex-direction: column;
   row-gap: 12px;
   max-width: 100ch;
   margin: auto;
-  padding-top: 12px;
-  padding-bottom: 24px;
 }
 
 table {
   box-sizing: border-box;
   border-collapse: collapse;
-  font-size: 0.8rem;
-  letter-spacing: 1px;
-  border: 1px solid rgb(208, 215, 222);
+  border: 1px solid var(--color-grey);
 }
 
 thead,
@@ -30,10 +38,9 @@ tfoot {
 
 th,
 td {
-  font-size: 12px;
-  line-height: 18px;
-  padding: 8px 16px 8px 12px;
-  border-bottom: 1px solid rgb(208, 215, 222);
+  @apply prose-sm;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-grey);
 }
 
 tr:hover {

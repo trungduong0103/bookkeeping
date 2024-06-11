@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import type { Author } from "@/interfaces";
 import { fetchAuthor, updateAuthor } from "@/fetchers";
+import { TextInput } from "@/components/TextInput/TextInput";
 
 export const getServerSideProps = (async (context) => {
   const author = await fetchAuthor(context.query.id as string);
@@ -43,11 +44,11 @@ export default function EditAuthorPage({
 
   return (
     <div>
-      Author edit page of {params?.id}, full name: {clientAuthor.fullName}
+      <h1 className="prose-2xl font-bold">Edit author {clientAuthor.fullName}</h1>
       <form onSubmit={handleSubmit(onSubmit)}>
         <label>Full Name</label>
         <br />
-        <input {...register("fullName")} />
+        <TextInput {...register("fullName")} />
         {errors.fullName && <div>{errors.fullName.message}</div>}
       </form>
     </div>
