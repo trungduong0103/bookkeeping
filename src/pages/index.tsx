@@ -5,13 +5,13 @@ import { Button } from "../components/Button";
 export default function Home() {
   return (
     <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
+      className={`flex min-h-screen items-center justify-between p-24 ${inter.className}`}
     >
       Hello World
-      <Button>Hello World</Button>
+      {/* <Button>Hello World</Button>
       <Button className="bg-lightBlue">Hello World</Button>
       <Button className="bg-darkYellow">Hello World</Button>
-      <Button className="bg-red">Hello World</Button>
+      <Button className="bg-red">Hello World</Button> */}
     </main>
   );
 }
