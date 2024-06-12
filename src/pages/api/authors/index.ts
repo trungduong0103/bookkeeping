@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import type { Author } from "@/interfaces";
 import { BOOKKEEPER_DATA } from "@/mock/data";
+import { generateId } from "../utils";
 
 const authorsData = BOOKKEEPER_DATA.authors;
 
@@ -18,7 +19,7 @@ export default function handler(
   res: NextApiResponse<string>
 ) {
   if (req.method === "POST") {
-    const newId = crypto.randomUUID();
+    const newId = generateId();
     authorsData.set(newId, {
       id: newId,
       fullName: JSON.parse(req.body).fullName,

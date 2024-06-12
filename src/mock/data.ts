@@ -1,5 +1,5 @@
-import crypto from "node:crypto";
 import type { Author, Book } from "@/interfaces";
+import { generateId } from "@/pages/api/utils";
 
 const authorNames = [
   "Ava Harper",
@@ -21,7 +21,7 @@ const authorNames = [
 
 const mockAuthors = authorNames.reduce<[string, Author][]>((acc, name) => {
   const author = {
-    id: crypto.randomUUID(),
+    id: generateId(),
     fullName: name,
     numberOfBooks: 0,
     books: [],
@@ -85,7 +85,7 @@ const books = [
 
 const mockBooks = books.reduce<[string, Book][]>((acc, book) => {
   const bookWithId = {
-    id: crypto.randomUUID(),
+    id: generateId(),
     ...book,
   } as Book;
   acc.push([bookWithId.id, bookWithId]);
