@@ -13,19 +13,24 @@ export const getServerSideProps = (async (context) => {
   return { props: { author } };
 }) satisfies GetServerSideProps<{ author: Author }>;
 
+type TEditAuthorPageProps = InferGetServerSidePropsType<
+  typeof getServerSideProps
+>;
+
 const authorSchema = object()
   .shape({ fullName: string().required("Full Name is required") })
   .required();
 
-export default function EditAuthorPage({
-  author,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function EditAuthorPage({ author }: TEditAuthorPageProps) {
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(authorSchema),
+    defaultValues: {
+      fullName: author?.fullName,
+    },
   });
   const [clientAuthor, setClientAuthor] = useState(author);
 
@@ -42,7 +47,7 @@ export default function EditAuthorPage({
   return (
     <div>
       <h1 className="prose-2xl font-bold leading-3 mb-5">
-        Edit author {clientAuthor.fullName}
+        Edit author: {clientAuthor.fullName}
       </h1>
       <form onSubmit={handleSubmit(onSubmit)}>
         <label>Full Name*</label>

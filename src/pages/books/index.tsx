@@ -22,6 +22,8 @@ export default function BooksPage({
 
   const handleDeleteBook = async (bookId: string) => {
     await deleteBook(bookId);
+    const apiBooks = await fetchBooks();
+    setClientBooks(apiBooks);
   };
 
   return (
@@ -51,7 +53,7 @@ export default function BooksPage({
             <tr key={book.id}>
               <td>{book.id}</td>
               <td>{book.title}</td>
-              <td>{book.authors.join(', ')}</td>
+              <td>{book.authors.join(", ")}</td>
               <td>{book.publicationYear}</td>
               <td>
                 <Link href={`books/${book.id}`}>

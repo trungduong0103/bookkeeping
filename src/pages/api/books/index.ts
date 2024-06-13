@@ -56,7 +56,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     booksData.set(bookId, { ...book, ...JSON.parse(req.body) });
-    return res.status(200).send(JSON.stringify({ message: "Author updated" }));
+    return res.status(200).send(JSON.stringify({ message: "Book updated" }));
   }
   if (req.method === "DELETE") {
     const book = getBooks(bookId);
@@ -67,7 +67,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         .send(JSON.stringify({ message: "Book is not found" }));
     }
 
-    booksData.delete(req.body.id);
+    booksData.delete(bookId);
     return res.status(200).send(JSON.stringify({ message: "Book deleted" }));
   }
 }
