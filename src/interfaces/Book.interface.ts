@@ -1,10 +1,8 @@
-import type { Author } from "./Author.interface";
-
-interface Book {
+interface IBook {
   id: string;
   title: string;
   authors: string[];
   publicationYear: number;
 }
 
-export type { Book };
+export type { IBook };

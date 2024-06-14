@@ -1,10 +1,10 @@
-import type { Book } from "./Book.interface";
+import type { IBook } from "./Book.interface";
 
-interface Author {
+interface IAuthor {
   id: string;
   fullName: string;
   numberOfBooks: number;
-  books: Book[];
+  books: IBook[];
 }
 
-export type { Author };
+export type { IAuthor };

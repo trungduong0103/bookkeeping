@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Book } from "@/interfaces";
+import type { IBook } from "@/interfaces";
 import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { deleteBook, fetchBooks } from "@/fetchers/Book.fetcher";
 import { TextInput } from "@/components/TextInput";
@@ -7,10 +7,15 @@ import { Button } from "@/components/Button";
 import Link from "next/link";
 
 export const getServerSideProps = (async () => {
-  const books = await fetchBooks();
+  let books: IBook[] = [];
+  try {
+    books = await fetchBooks({ sortBy: "title", order: "asc" });
+  } catch (err) {
+    console.error(err);
+  }
 
   return { props: { books: books } };
-}) satisfies GetServerSideProps<{ books: Book[] }>;
+}) satisfies GetServerSideProps<{ books: IBook[] }>;
 
 export default function BooksPage({
   books,
@@ -22,7 +27,7 @@ export default function BooksPage({
 
   const handleDeleteBook = async (bookId: string) => {
     await deleteBook(bookId);
-    const apiBooks = await fetchBooks();
+    const apiBooks = await fetchBooks({ sortBy: "title", order: "asc" });
     setClientBooks(apiBooks);
   };
 
@@ -52,7 +57,7 @@ export default function BooksPage({
           {clientBooks.map((book) => (
             <tr key={book.id}>
               <td>{book.id}</td>
-              <td>{book.title}</td>
+              <td className="capitalize">{book.title}</td>
               <td>{book.authors.join(", ")}</td>
               <td>{book.publicationYear}</td>
               <td>

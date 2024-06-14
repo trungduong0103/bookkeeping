@@ -3,14 +3,15 @@ import { Controller, useForm } from "react-hook-form";
 import { array, number, object, string } from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
-import type { Author, Book } from "@/interfaces";
+import type { IAuthor, IBook } from "@/interfaces";
 import { fetchAuthors, fetchBook, updateBook } from "@/fetchers";
+import { Chip } from "@/components/Chip";
 import { Button } from "@/components/Button";
 import { TextInput } from "@/components/TextInput";
 import { SelectInput } from "@/components/SelectInput";
 
 export const getServerSideProps = (async (context) => {
-  const book = await fetchBook(context.query.id as string);
+  const book = await fetchBook(context.query.bookId as string);
   const authors = await fetchAuthors();
 
   if (!book) {
@@ -20,7 +21,7 @@ export const getServerSideProps = (async (context) => {
   }
 
   return { props: { book, authors } };
-}) satisfies GetServerSideProps<{ book: Book; authors: Author[] }>;
+}) satisfies GetServerSideProps<{ book: IBook; authors: IAuthor[] }>;
 
 const authorSchema = object()
   .shape({
@@ -41,18 +42,7 @@ const AuthorChip = ({
   authorName: string;
   onRemove: (authorName: string) => void;
 }) => {
-  return (
-    <div className="prose text-sm flex gap-2 items-center border-solid border-grey border-[2px] py-1 px-5 rounded-2xl">
-      <span>{authorName}</span>
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: whatevs */}
-      <span
-        onClick={() => onRemove(authorName)}
-        className="text-[10px] cursor-pointer"
-      >
-        X
-      </span>
-    </div>
-  );
+  return <Chip title={authorName} onRemove={onRemove} />;
 };
 
 export default function EditAuthorPage({
@@ -75,7 +65,7 @@ export default function EditAuthorPage({
   const [clientBook, setClientBook] = useState(book);
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
 
-  const onSubmit = async (data: Partial<Book>) => {
+  const onSubmit = async (data: Partial<IBook>) => {
     await updateBook(book.id, { ...data, authors: selectedAuthors });
     const apiBook = await fetchBook(book.id);
     setClientBook(apiBook);
@@ -120,7 +110,7 @@ export default function EditAuthorPage({
               />
             )}
           />
-          <p>Selected Authors: </p>
+          <p className="mt-2">Selected Authors (Duplicates are removed): </p>
           <div className="flex flex-row gap-2">
             {selectedAuthors.map((name) => (
               <AuthorChip
