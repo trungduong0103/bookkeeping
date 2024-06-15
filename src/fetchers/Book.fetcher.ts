@@ -1,13 +1,24 @@
-import type { IBook } from "@/interfaces";
+import type { IAuthor, IBook } from "@/interfaces";
+import { fetchAuthor, updateAuthor } from "./Author.fetcher";
 const BASE_URL = "https://666bb50349dbc5d7145af2d5.mockapi.io/api/books";
 
-export const createBook = async (book: Partial<IBook>): Promise<void> => {
+export const createBook = async (
+  book: Pick<IBook, "title" | "publicationYear"> & { authors: { id: string, fullName: string}[] }
+): Promise<void> => {
   try {
     const response = await fetch(BASE_URL, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ...book }),
+      body: JSON.stringify({ ...book, authors: book.authors.map(({ fullName }) => fullName) }),
     });
+    const updateAuthorPromises = book.authors.map(async (author) => {
+      const toUpdateAuthor = await fetchAuthor(author.id);
+      await updateAuthor(author.id, { numberOfBooks: toUpdateAuthor.numberOfBooks + 1 });
+    })
+
+    await Promise.all(updateAuthorPromises);
+    
+    // TODO: Check update author number of book promises for failure
     if (!response.ok) {
       return Promise.reject(response);
     }

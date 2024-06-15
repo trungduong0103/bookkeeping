@@ -9,6 +9,7 @@ import { Chip } from "@/components/Chip";
 import { Button } from "@/components/Button";
 import { TextInput } from "@/components/TextInput";
 import { SelectInput } from "@/components/SelectInput";
+import toast, { Toaster } from "react-hot-toast";
 
 export const getServerSideProps = (async (context) => {
   try {
@@ -66,10 +67,17 @@ export default function BookPage({ book, authors }: TBookPageProps) {
   const onSubmit = async (data: Partial<IBook>) => {
     setUpdating(true);
     try {
-      await updateBook(book.id, { ...data, authors: selectedAuthors });
-      const apiBook = await fetchBook(book.id);
-      setSelectedAuthors([]);
-      setClientBook(apiBook);
+      const toastPromise = async () => {
+        await updateBook(book.id, { ...data, authors: selectedAuthors });
+        const apiBook = await fetchBook(book.id);
+        setSelectedAuthors([]);
+        setClientBook(apiBook);
+      };
+      await toast.promise(toastPromise(), {
+        loading: "Updating book...",
+        success: "Book updated!",
+        error: "Could not update book, please try again.",
+      });
     } catch (err) {
       console.error(err);
     } finally {
@@ -124,6 +132,7 @@ export default function BookPage({ book, authors }: TBookPageProps) {
                   selectorOnchangeRef.current = onChange;
                   return (
                     <SelectInput
+                      className="w-[250px]"
                       {...others}
                       onChange={(e) => {
                         setSelectedAuthors((prev) =>
@@ -180,7 +189,7 @@ export default function BookPage({ book, authors }: TBookPageProps) {
           {updating ? (
             <div className="skeleton w-[200px]" />
           ) : (
-            <TextInput {...register("publicationYear")} />
+            <TextInput className="w-[250px]" {...register("publicationYear")} />
           )}
           {errors.publicationYear && (
             <p className="prose-sm text-red">
@@ -193,6 +202,7 @@ export default function BookPage({ book, authors }: TBookPageProps) {
           {updating ? "Submitting..." : "Submit"}
         </Button>
       </form>
+      <Toaster />
     </div>
   );
 }

@@ -17,15 +17,15 @@ const SelectInput = forwardRef<HTMLSelectElement, TSelectInputProps>(
     return (
       <select
         ref={forwardedRef}
-        onChange={(e) => console.log(e.target.value)}
+        onChange={others.onChange}
         className={`border-solid border-grey border-[2px] pr-[59px] py-2 rounded-md ${className}`}
         {...others}
       >
         <option value="" className="hidden">
           Select Option
         </option>
-        {options.map(({ key, value }) => (
-          <option key={key}>{value}</option>
+        {options.map(({ key, value }, index) => (
+          <option key={key} value={index}>{value}</option>
         ))}
       </select>
     );

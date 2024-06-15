@@ -9,6 +9,7 @@ import { Chip } from "@/components/Chip";
 import { Button } from "@/components/Button";
 import { TextInput } from "@/components/TextInput";
 import { SelectInput } from "@/components/SelectInput";
+import toast, { Toaster } from "react-hot-toast";
 
 export const getServerSideProps = (async () => {
   const authors = await fetchAuthors({ noLimit: true });
@@ -19,7 +20,13 @@ const authorSchema = object()
   .shape({
     title: string().required("Title is required."),
     authors: array()
-      .of(string().required())
+      .of(
+        object().shape({
+          id: number().required(),
+          fullName: string().required(),
+        })
+      )
+      .required()
       .required("At least an author is required."),
     publicationYear: number()
       .integer()
@@ -50,18 +57,27 @@ export default function AddBookPage({ authors }: TAddBookPageProps) {
   } = useForm({
     resolver: yupResolver(authorSchema),
   });
-  const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
+  const [selectedAuthors, setSelectedAuthors] = useState<
+    Pick<IAuthor, "id" | "fullName">[]
+  >([]);
   const [creating, setCreating] = useState(false);
   // cheat to update on change without controller
   // biome-ignore lint/suspicious/noExplicitAny: bc im lazy
   const selectorOnchangeRef = useRef<(...event: any[]) => void>();
 
-  const onSubmit = async (data: Partial<IBook>) => {
+  const onSubmit = async (data: Pick<IBook, "title" | "publicationYear"> & { authors: { id: string, fullName: string}[] }) => {
     setCreating(true);
     try {
-      await createBook(data);
-      setSelectedAuthors([]);
-      reset();
+      const toastPromise = async () => {
+        await createBook(data);
+        setSelectedAuthors([]);
+        reset();
+      };
+      await toast.promise(toastPromise(), {
+        loading: "Creating book...",
+        success: "Book created!",
+        error: "Could not create book, please try again.",
+      });
     } catch (err) {
       console.error(err);
     } finally {
@@ -103,14 +119,13 @@ export default function AddBookPage({ authors }: TAddBookPageProps) {
                     className="w-[250px]"
                     {...others}
                     onChange={(e) => {
-                      setSelectedAuthors((prev) =>
-                        Array.from(new Set([...prev, e.target.value]))
-                      );
-                      onChange(
-                        Array.from(
-                          new Set([...selectedAuthors, e.target.value])
-                        )
-                      );
+                      const selectedIdx = e.target.value as unknown as number;
+                      const selectedAuthor = {
+                        id: authors[selectedIdx].id,
+                        fullName: authors[selectedIdx].fullName,
+                      };
+                      setSelectedAuthors((prev) => [...prev, selectedAuthor]);
+                      onChange([...selectedAuthors, selectedAuthor]);
                     }}
                     options={authors.map((author) => ({
                       key: author.id,
@@ -131,16 +146,16 @@ export default function AddBookPage({ authors }: TAddBookPageProps) {
         </p>
 
         <div className="flex gap-2 flex-wrap">
-          {selectedAuthors.map((name) => (
+          {selectedAuthors.map((author) => (
             <AuthorChip
-              key={name}
-              authorName={name}
+              key={author.id}
+              authorName={author.fullName}
               onRemove={(author) => {
                 setSelectedAuthors((prev) =>
-                  prev.filter((curr) => curr !== author)
+                  prev.filter((curr) => curr.fullName !== author)
                 );
                 selectorOnchangeRef.current?.(
-                  selectedAuthors.filter((curr) => curr !== author)
+                  selectedAuthors.filter((curr) => curr.fullName !== author)
                 );
               }}
             />
@@ -164,6 +179,7 @@ export default function AddBookPage({ authors }: TAddBookPageProps) {
 
         <Button type="submit">{creating ? "Creating..." : "Submit"}</Button>
       </form>
+      <Toaster />
     </div>
   );
 }

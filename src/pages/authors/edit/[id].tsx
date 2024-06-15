@@ -7,6 +7,7 @@ import type { IAuthor } from "@/interfaces";
 import { fetchAuthor, updateAuthor } from "@/fetchers";
 import { Button } from "@/components/Button";
 import { TextInput } from "@/components/TextInput";
+import toast, { Toaster } from "react-hot-toast";
 
 export const getServerSideProps = (async (context) => {
   try {
@@ -48,9 +49,16 @@ export default function EditAuthorPage({ author }: TEditAuthorPageProps) {
   const onSubmit = async (data: Pick<IAuthor, "fullName">) => {
     setUpdating(true);
     try {
-      await updateAuthor(author.id, { fullName: data.fullName });
-      const apiAuthor = await fetchAuthor(author.id);
-      setClientAuthor(apiAuthor);
+      const toastPromise = async () => {
+        await updateAuthor(author.id, { fullName: data.fullName });
+        const apiAuthor = await fetchAuthor(author.id);
+        setClientAuthor(apiAuthor);
+      };
+      await toast.promise(toastPromise(), {
+        loading: "Updating author...",
+        success: "Author updated!",
+        error: "Could not update author, please try again.",
+      });
     } catch (err) {
       console.error(err);
     } finally {
@@ -83,6 +91,7 @@ export default function EditAuthorPage({ author }: TEditAuthorPageProps) {
           {updating ? "Submitting..." : "Submit"}
         </Button>
       </form>
+      <Toaster />
     </div>
   );
 }
