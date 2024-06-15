@@ -3,15 +3,21 @@ import { useForm } from "react-hook-form";
 import { object, string } from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
-import type { Author } from "@/interfaces";
+import type { IAuthor } from "@/interfaces";
 import { fetchAuthor, updateAuthor } from "@/fetchers";
+import { Button } from "@/components/Button";
 import { TextInput } from "@/components/TextInput";
 
 export const getServerSideProps = (async (context) => {
-  const author = await fetchAuthor(context.query.id as string);
+  try {
+    const author = await fetchAuthor(context.query.id as string);
+    return { props: { author } };
+  } catch (err) {
+    console.error(err);
+  }
 
-  return { props: { author } };
-}) satisfies GetServerSideProps<{ author: Author }>;
+  return { notFound: true };
+}) satisfies GetServerSideProps<{ author: IAuthor }>;
 
 type TEditAuthorPageProps = InferGetServerSidePropsType<
   typeof getServerSideProps
@@ -33,29 +39,49 @@ export default function EditAuthorPage({ author }: TEditAuthorPageProps) {
     },
   });
   const [clientAuthor, setClientAuthor] = useState(author);
+  const [updating, setUpdating] = useState(false);
 
   if (!author) {
     return <div>Oops could not load that author</div>;
   }
 
-  const onSubmit = async (data: Pick<Author, "fullName">) => {
-    await updateAuthor(author.id, { fullName: data.fullName });
-    const apiAuthor = await fetchAuthor(author.id);
-    setClientAuthor(apiAuthor);
+  const onSubmit = async (data: Pick<IAuthor, "fullName">) => {
+    setUpdating(true);
+    try {
+      await updateAuthor(author.id, { fullName: data.fullName });
+      const apiAuthor = await fetchAuthor(author.id);
+      setClientAuthor(apiAuthor);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUpdating(false);
+    }
   };
 
   return (
     <div>
-      <h1 className="prose-2xl font-bold leading-3 mb-5">
-        Edit author: {clientAuthor.fullName}
-      </h1>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <label>Full Name*</label>
-        <br />
-        <TextInput {...register("fullName")} />
-        {errors.fullName && (
-          <p className="prose-sm text-red">{errors.fullName.message}</p>
+      <div className="flex gap-2 items-center mb-5">
+        <h1 className="prose-2xl font-bold leading-3">Edit book: </h1>
+        {updating ? (
+          <span className="skeleton inline-block w-[200px]" />
+        ) : (
+          <h1 className="prose-2xl font-bold leading-3">
+            {clientAuthor.fullName}
+          </h1>
         )}
+      </div>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="mb-3">
+          <label className="block font-bold mb-2">Full Name*:</label>
+          <TextInput {...register("fullName")} />
+          {errors.fullName && (
+            <p className="prose-sm text-red">{errors.fullName.message}</p>
+          )}
+        </div>
+
+        <Button variant="info" disabled={updating} type="submit">
+          {updating ? "Submitting..." : "Submit"}
+        </Button>
       </form>
     </div>
   );

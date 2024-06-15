@@ -10,16 +10,21 @@ import { Button } from "@/components/Button";
 import { TextInput } from "@/components/TextInput";
 import { SelectInput } from "@/components/SelectInput";
 
-export const getServerSideProps = (async (context) => {
-  const authors = await fetchAuthors();
+export const getServerSideProps = (async () => {
+  const authors = await fetchAuthors({ noLimit: true });
   return { props: { authors } };
 }) satisfies GetServerSideProps<{ authors: IAuthor[] }>;
 
 const authorSchema = object()
   .shape({
-    title: string().required("Title is required"),
-    authors: array().of(string().required()).required(),
-    publicationYear: number().integer().positive().required(),
+    title: string().required("Title is required."),
+    authors: array()
+      .of(string().required())
+      .required("At least an author is required."),
+    publicationYear: number()
+      .integer()
+      .positive()
+      .required("Publication Year is required."),
   })
   .required();
 
@@ -46,13 +51,22 @@ export default function AddBookPage({ authors }: TAddBookPageProps) {
     resolver: yupResolver(authorSchema),
   });
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
+  const [creating, setCreating] = useState(false);
   // cheat to update on change without controller
   // biome-ignore lint/suspicious/noExplicitAny: bc im lazy
   const selectorOnchangeRef = useRef<(...event: any[]) => void>();
 
   const onSubmit = async (data: Partial<IBook>) => {
-    await createBook(data);
-    reset();
+    setCreating(true);
+    try {
+      await createBook(data);
+      setSelectedAuthors([]);
+      reset();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -64,7 +78,11 @@ export default function AddBookPage({ authors }: TAddBookPageProps) {
       >
         <div className="w-full flex items-center justify-between">
           <label className="font-bold mr-2">Title:*</label>
-          <TextInput {...register("title")} />
+          {creating ? (
+            <div className="skeleton w-[200px]" />
+          ) : (
+            <TextInput className="w-[250px]" {...register("title")} />
+          )}
         </div>
         {errors.title && (
           <p className="prose-sm text-red">{errors.title.message}</p>
@@ -72,30 +90,37 @@ export default function AddBookPage({ authors }: TAddBookPageProps) {
 
         <div className="w-full flex items-center justify-between">
           <label className="font-bold">Authors: </label>
-          <Controller
-            control={control}
-            name="authors"
-            render={({ field: { onChange, ...others } }) => {
-              selectorOnchangeRef.current = onChange;
-              return (
-                <SelectInput
-                  {...others}
-                  onChange={(e) => {
-                    setSelectedAuthors((prev) =>
-                      Array.from(new Set([...prev, e.target.value]))
-                    );
-                    onChange(
-                      Array.from(new Set([...selectedAuthors, e.target.value]))
-                    );
-                  }}
-                  options={authors.map((author) => ({
-                    key: author.id,
-                    value: author.fullName,
-                  }))}
-                />
-              );
-            }}
-          />
+          {creating ? (
+            <div className="skeleton w-[200px]" />
+          ) : (
+            <Controller
+              control={control}
+              name="authors"
+              render={({ field: { onChange, ...others } }) => {
+                selectorOnchangeRef.current = onChange;
+                return (
+                  <SelectInput
+                    className="w-[250px]"
+                    {...others}
+                    onChange={(e) => {
+                      setSelectedAuthors((prev) =>
+                        Array.from(new Set([...prev, e.target.value]))
+                      );
+                      onChange(
+                        Array.from(
+                          new Set([...selectedAuthors, e.target.value])
+                        )
+                      );
+                    }}
+                    options={authors.map((author) => ({
+                      key: author.id,
+                      value: author.fullName,
+                    }))}
+                  />
+                );
+              }}
+            />
+          )}
         </div>
 
         <p
@@ -121,20 +146,23 @@ export default function AddBookPage({ authors }: TAddBookPageProps) {
             />
           ))}
         </div>
-
         {errors.authors && (
           <p className="prose-sm text-red">{errors.authors.message}</p>
         )}
 
         <div className="w-full flex items-center justify-between">
           <label className="block font-bold">Publication Year:*</label>
-          <TextInput {...register("publicationYear")} />
+          {creating ? (
+            <div className="skeleton w-[200px]" />
+          ) : (
+            <TextInput className="w-[250px]" {...register("publicationYear")} />
+          )}
         </div>
         {errors.publicationYear && (
           <p className="prose-sm text-red">{errors.publicationYear.message}</p>
         )}
 
-        <Button type="submit">Submit</Button>
+        <Button type="submit">{creating ? "Creating..." : "Submit"}</Button>
       </form>
     </div>
   );

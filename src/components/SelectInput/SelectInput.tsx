@@ -13,12 +13,12 @@ interface TSelectInputProps
 }
 
 const SelectInput = forwardRef<HTMLSelectElement, TSelectInputProps>(
-  ({ options, ...others }, forwardedRef) => {
+  ({ options, className, ...others }, forwardedRef) => {
     return (
       <select
         ref={forwardedRef}
         onChange={(e) => console.log(e.target.value)}
-        className="border-solid border-grey border-[2px] pr-[59px] py-2 rounded-md"
+        className={`border-solid border-grey border-[2px] pr-[59px] py-2 rounded-md ${className}`}
         {...others}
       >
         <option value="" className="hidden">

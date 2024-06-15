@@ -18,23 +18,28 @@ export const createBook = async (book: Partial<IBook>): Promise<void> => {
   }
 };
 
+type TFetchParams = {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  order?: "asc" | "desc";
+  searchQuery?: string;
+};
+
 export const fetchBooks = async ({
   page = 1,
   limit = 10,
-  sortBy,
-  order,
-}: {
-  page?: number;
-  limit?: number;
-  sortBy?: keyof IBook;
-  order?: "asc" | "desc";
-}): Promise<IBook[]> => {
+  sortBy = "title",
+  order = "asc",
+  searchQuery = "",
+}: TFetchParams = {}): Promise<IBook[]> => {
   try {
     const url = new URL(BASE_URL);
     url.searchParams.append("page", `${page}`);
     url.searchParams.append("limit", `${limit}`);
     sortBy && url.searchParams.append("sortBy", sortBy);
     order && url.searchParams.append("order", order);
+    searchQuery && url.searchParams.append("title", searchQuery);
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -47,26 +52,18 @@ export const fetchBooks = async ({
   }
 };
 
-type TFetchBookDTO = {
-  data: IBook;
-};
-
 export const fetchBook = async (bookId: string): Promise<IBook> => {
   try {
     const response = await fetch(`${BASE_URL}/${bookId}`);
     if (!response.ok) {
       return Promise.reject(response);
     }
-    console.log(response);
-
     return await response.json();
   } catch (err) {
     console.error(err);
     throw new Error("Error. Could not fetch Book.");
   }
 };
-
-type TUpdateBookDTO = TFetchBookDTO;
 
 export const updateBook = async (bookId: string, data: Partial<IBook>) => {
   try {
@@ -78,8 +75,7 @@ export const updateBook = async (bookId: string, data: Partial<IBook>) => {
     if (!response.ok) {
       return Promise.reject(response);
     }
-    const jsonResponse = (await response.json()) as TUpdateBookDTO;
-    return jsonResponse.data;
+    return;
   } catch (err) {
     console.error(err);
     throw new Error("Error. Could not update Book.");

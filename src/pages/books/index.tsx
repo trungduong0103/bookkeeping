@@ -4,6 +4,7 @@ import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { deleteBook, fetchBooks } from "@/fetchers/Book.fetcher";
 import { TextInput } from "@/components/TextInput";
 import { Button } from "@/components/Button";
+import { useDebounce } from "@/hooks";
 import Link from "next/link";
 
 export const getServerSideProps = (async () => {
@@ -55,14 +56,18 @@ export default function BooksPage({
     order: "asc",
   });
 
-  if (!books) {
-    return <div>Ooops could not load books...</div>;
-  }
-
   const handleDeleteBook = async (bookId: string) => {
-    await deleteBook(bookId);
-    const apiBooks = await fetchBooks({ sortBy: "title", order: "asc" });
-    setClientBooks(apiBooks);
+    setFetchingBooks(true);
+    try {
+      await deleteBook(bookId);
+      // @ts-ignore
+      const apiBooks = await fetchBooks({ ...queryParams });
+      setClientBooks(apiBooks);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setFetchingBooks(false);
+    }
   };
 
   const handleGoNext = async () => {
@@ -99,16 +104,17 @@ export default function BooksPage({
     }
   };
 
+  if (!books) {
+    return <div>Ooops could not load books...</div>;
+  }
+
   return (
     <>
       <div className="w-full md:flex md:flex-row justify-between items-center">
         <h1 className="prose prose-2xl font-bold">Books</h1>
-        <div>
-          <TextInput placeholder="Search for a book" />
-          <Link href="books/add/" className="ml-2">
-            <Button>+ Add New Book</Button>
-          </Link>
-        </div>
+        <Link href="books/add/" className="ml-2">
+          <Button>+ Add New Book</Button>
+        </Link>
       </div>
       <table className="table-fixed">
         <thead>

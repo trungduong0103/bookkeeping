@@ -4,7 +4,7 @@ import type {
   GetServerSideProps,
   InferGetServerSidePropsType,
 } from "next/types";
-import type { Author } from "@/interfaces";
+import type { IAuthor } from "@/interfaces";
 import { fetchAuthors, deleteAuthor } from "@/fetchers";
 import { Button } from "@/components/Button";
 import { TextInput } from "../../components/TextInput/TextInput";
@@ -13,33 +13,94 @@ export const getServerSideProps = (async () => {
   const authors = await fetchAuthors();
 
   return { props: { authors } };
-}) satisfies GetServerSideProps<{ authors: Author[] }>;
+}) satisfies GetServerSideProps<{ authors: IAuthor[] }>;
+
+const LoadingAuthors = () => {
+  return Array.from({ length: 10 }).map((_, idx) => (
+    // biome-ignore lint/suspicious/noArrayIndexKey: idc
+    <tr key={idx} className="h-[65px]">
+      <td>
+        <div className="skeleton" />
+      </td>
+      <td>
+        <div className="skeleton" />
+      </td>
+      <td>
+        <div className="skeleton" />
+      </td>
+      <td className="w-[65px]">
+        <div className="skeleton" />
+      </td>
+      <td className="w-[65px]">
+        <div className="skeleton" />
+      </td>
+    </tr>
+  ));
+};
 
 export default function AuthorsPage({
   authors,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const [clientAuthors, setClientAuthors] = useState(authors);
+  const [fetchingAuthors, setFetchingAuthors] = useState(false);
+  const [queryParams, setQueryParams] = useState({
+    page: 1,
+    limit: 10,
+    sortBy: "fullName",
+    order: "asc",
+  });
 
-  if (!authors) {
-    return <div>Oops could not load authors...</div>;
-  }
-
-  const handleClick = async (authorId: string) => {
+  const handleDeleteAuthor = async (authorId: string) => {
     await deleteAuthor(authorId);
     const authors = await fetchAuthors();
     setClientAuthors(authors);
   };
 
+  const handleGoNext = async () => {
+    setFetchingAuthors(true);
+    try {
+      const nextPage = queryParams.page + 1;
+      setQueryParams((prev) => ({ ...prev, page: nextPage }));
+      const nextAuthors = await fetchAuthors({
+        sortBy: "fullName",
+        page: nextPage,
+      });
+      setClientAuthors(nextAuthors);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setFetchingAuthors(false);
+    }
+  };
+
+  const handleGoBack = async () => {
+    setFetchingAuthors(true);
+    try {
+      const previousPage = queryParams.page - 1;
+      setQueryParams((prev) => ({ ...prev, page: previousPage }));
+      const previousAuthors = await fetchAuthors({
+        sortBy: "fullName",
+        page: previousPage,
+      });
+      setClientAuthors(previousAuthors);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setFetchingAuthors(false);
+    }
+  };
+
+  if (!authors) {
+    return <div>Oops could not load authors...</div>;
+  }
+
   return (
     <>
-      <div className="flex flex-row justify-between items-center">
+      <div className="w-full md:flex md:flex-row justify-between items-center">
         <h1 className="prose prose-2xl font-bold">Authors</h1>
-        <div>
-          <TextInput placeholder="Search for an author" />
-          <Link href="authors/add" className="ml-2">
-            <Button>+ Add New Author</Button>
-          </Link>
-        </div>
+        <Link href="authors/add" className="ml-2">
+          <Button>+ Add New Author</Button>
+        </Link>
       </div>
       <table>
         <thead>
@@ -52,28 +113,51 @@ export default function AuthorsPage({
           </tr>
         </thead>
         <tbody>
-          {clientAuthors.map((author) => (
-            <tr key={author.id}>
-              <td>{author.id}</td>
-              <td>{author.fullName}</td>
-              <td>{author.numberOfBooks}</td>
-              <td>
-                <Link href={`authors/${author.id}`}>
-                  <Button variant="info">Edit</Button>
-                </Link>
-              </td>
-              <td>
-                <Button
-                  variant="danger"
-                  onClick={() => handleClick(author.id)}
-                  type="button"
-                >
-                  Delete
-                </Button>
-              </td>
-            </tr>
-          ))}
+          {fetchingAuthors ? (
+            <LoadingAuthors />
+          ) : (
+            clientAuthors.map((author) => (
+              <tr key={author.id}>
+                <td>{author.id}</td>
+                <td>{author.fullName}</td>
+                <td>{author.numberOfBooks}</td>
+                <td className="w-[65px]">
+                  <Link href={`authors/edit/${author.id}`}>
+                    <Button variant="info">Edit</Button>
+                  </Link>
+                </td>
+                <td className="w-[65px]">
+                  <Button
+                    variant="danger"
+                    onClick={() => handleDeleteAuthor(author.id)}
+                    type="button"
+                  >
+                    Delete
+                  </Button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
+        <tfoot>
+          <tr>
+            <td />
+            <td />
+            <td />
+            <td className="w-[65px]">
+              {queryParams.page !== 1 && (
+                <Button onClick={handleGoBack} variant="ghost">
+                  Previous
+                </Button>
+              )}
+            </td>
+            <td className="w-[65px]">
+              <Button onClick={handleGoNext} variant="ghost">
+                Next
+              </Button>
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </>
   );
