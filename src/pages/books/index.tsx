@@ -2,9 +2,7 @@ import { useState } from "react";
 import type { IBook } from "@/interfaces";
 import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { deleteBook, fetchBooks } from "@/fetchers/Book.fetcher";
-import { TextInput } from "@/components/TextInput";
 import { Button } from "@/components/Button";
-import { useDebounce } from "@/hooks";
 import Link from "next/link";
 
 export const getServerSideProps = (async () => {
@@ -70,33 +68,13 @@ export default function BooksPage({
     }
   };
 
-  const handleGoNext = async () => {
+  const handleChangePage = async (type: "prev" | "next") => {
     setFetchingBooks(true);
     try {
-      const nextPage = queryParams.page + 1;
-      setQueryParams((prev) => ({ ...prev, page: nextPage }));
-      const nextBooks = await fetchBooks({
-        sortBy: "title",
-        page: nextPage,
-      });
-      setClientBooks(nextBooks);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setFetchingBooks(false);
-    }
-  };
-
-  const handleGoBack = async () => {
-    setFetchingBooks(true);
-    try {
-      const previousPage = queryParams.page - 1;
-      setQueryParams((prev) => ({ ...prev, page: previousPage }));
-      const previousBooks = await fetchBooks({
-        sortBy: "title",
-        page: previousPage,
-      });
-      setClientBooks(previousBooks);
+      const page = type === "prev" ? queryParams.page - 1 : queryParams.page + 1;
+      setQueryParams((prev) => ({ ...prev, page }));
+      const newBooks = await fetchBooks({ page });
+      setClientBooks(newBooks);
     } catch (err) {
       console.error(err);
     } finally {
@@ -113,7 +91,7 @@ export default function BooksPage({
       <div className="w-full md:flex md:flex-row justify-between items-center">
         <h1 className="prose prose-2xl font-bold">Books</h1>
         <Link href="books/add/" className="ml-2">
-          <Button>+ Add New Book</Button>
+          <Button>Add New Book</Button>
         </Link>
       </div>
       <table className="table-fixed">
@@ -165,13 +143,16 @@ export default function BooksPage({
             <td />
             <td className="w-[65px]">
               {queryParams.page !== 1 && (
-                <Button onClick={handleGoBack} variant="ghost">
+                <Button
+                  onClick={() => handleChangePage("prev")}
+                  variant="ghost"
+                >
                   Previous
                 </Button>
               )}
             </td>
             <td className="w-[65px]">
-              <Button onClick={handleGoNext} variant="ghost">
+              <Button onClick={() => handleChangePage("next")} variant="ghost">
                 Next
               </Button>
             </td>
