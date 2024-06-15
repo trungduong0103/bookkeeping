@@ -7,12 +7,17 @@ import type {
 import type { IAuthor } from "@/interfaces";
 import { fetchAuthors, deleteAuthor } from "@/fetchers";
 import { Button } from "@/components/Button";
-import { TextInput } from "../../components/TextInput/TextInput";
+import toast, { Toaster } from "react-hot-toast";
 
 export const getServerSideProps = (async () => {
-  const authors = await fetchAuthors();
+  try {
+    const authors = await fetchAuthors();
+    return { props: { authors } };
+  } catch (err) {
+    console.error(err);
+  }
 
-  return { props: { authors } };
+  return { notFound: true };
 }) satisfies GetServerSideProps<{ authors: IAuthor[] }>;
 
 const LoadingAuthors = () => {
@@ -51,21 +56,18 @@ export default function AuthorsPage({
   });
 
   const handleDeleteAuthor = async (authorId: string) => {
-    await deleteAuthor(authorId);
-    const authors = await fetchAuthors();
-    setClientAuthors(authors);
-  };
-
-  const handleGoNext = async () => {
     setFetchingAuthors(true);
     try {
-      const nextPage = queryParams.page + 1;
-      setQueryParams((prev) => ({ ...prev, page: nextPage }));
-      const nextAuthors = await fetchAuthors({
-        sortBy: "fullName",
-        page: nextPage,
+      const toastPromise = async () => {
+        await deleteAuthor(authorId);
+        const authors = await fetchAuthors();
+        setClientAuthors(authors);
+      };
+      await toast.promise(toastPromise(), {
+        loading: "Deleting author...",
+        success: "Author deleted!",
+        error: "Could not delete author, please try again.",
       });
-      setClientAuthors(nextAuthors);
     } catch (err) {
       console.error(err);
     } finally {
@@ -73,16 +75,13 @@ export default function AuthorsPage({
     }
   };
 
-  const handleGoBack = async () => {
+  const handleChangePage = async (type: "prev" | "next") => {
     setFetchingAuthors(true);
     try {
-      const previousPage = queryParams.page - 1;
-      setQueryParams((prev) => ({ ...prev, page: previousPage }));
-      const previousAuthors = await fetchAuthors({
-        sortBy: "fullName",
-        page: previousPage,
-      });
-      setClientAuthors(previousAuthors);
+      const page = type === "prev" ? queryParams.page - 1 : queryParams.page + 1;
+      setQueryParams((prev) => ({ ...prev, page }));
+      const newAuthors = await fetchAuthors({ page });
+      setClientAuthors(newAuthors);
     } catch (err) {
       console.error(err);
     } finally {
@@ -146,19 +145,23 @@ export default function AuthorsPage({
             <td />
             <td className="w-[65px]">
               {queryParams.page !== 1 && (
-                <Button onClick={handleGoBack} variant="ghost">
+                <Button
+                  onClick={() => handleChangePage("prev")}
+                  variant="ghost"
+                >
                   Previous
                 </Button>
               )}
             </td>
             <td className="w-[65px]">
-              <Button onClick={handleGoNext} variant="ghost">
+              <Button onClick={() => handleChangePage("next")} variant="ghost">
                 Next
               </Button>
             </td>
           </tr>
         </tfoot>
       </table>
+      <Toaster />
     </>
   );
 }

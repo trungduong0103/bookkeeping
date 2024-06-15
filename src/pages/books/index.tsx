@@ -4,16 +4,17 @@ import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { deleteBook, fetchBooks } from "@/fetchers/Book.fetcher";
 import { Button } from "@/components/Button";
 import Link from "next/link";
+import toast, { Toaster } from "react-hot-toast";
 
 export const getServerSideProps = (async () => {
-  let books: IBook[] = [];
   try {
-    books = await fetchBooks({ sortBy: "title", order: "asc" });
+    const books = await fetchBooks({ sortBy: "title", order: "asc" });
+    return { props: { books: books } };
   } catch (err) {
     console.error(err);
   }
 
-  return { props: { books: books } };
+  return { notFound: true };
 }) satisfies GetServerSideProps<{ books: IBook[] }>;
 
 const LoadingBooks = () => {
@@ -57,10 +58,17 @@ export default function BooksPage({
   const handleDeleteBook = async (bookId: string) => {
     setFetchingBooks(true);
     try {
-      await deleteBook(bookId);
-      // @ts-ignore
-      const apiBooks = await fetchBooks({ ...queryParams });
-      setClientBooks(apiBooks);
+      const toastPromise = async () => {
+        await deleteBook(bookId);
+        // @ts-ignore
+        const newBooks = await fetchBooks({ ...queryParams });
+        setClientBooks(newBooks);
+      };
+      await toast.promise(toastPromise(), {
+        loading: "Deleting book...",
+        success: "Book deleted!",
+        error: "Could not delete book, please try again.",
+      })
     } catch (err) {
       console.error(err);
     } finally {
@@ -159,6 +167,7 @@ export default function BooksPage({
           </tr>
         </tfoot>
       </table>
+      <Toaster />
     </>
   );
 }
