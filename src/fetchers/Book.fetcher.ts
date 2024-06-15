@@ -1,10 +1,11 @@
 import type { IBook } from "@/interfaces";
 const BASE_URL = "https://666bb50349dbc5d7145af2d5.mockapi.io/api/books";
 
-export const createBook = async (book: IBook): Promise<void> => {
+export const createBook = async (book: Partial<IBook>): Promise<void> => {
   try {
     const response = await fetch(BASE_URL, {
       method: "POST",
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({ ...book }),
     });
     if (!response.ok) {

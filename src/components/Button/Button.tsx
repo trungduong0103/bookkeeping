@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import cn from "classnames";
 
-type Variant = "primary" | "info" | "danger";
+type Variant = "primary" | "info" | "danger" | "ghost";
 
 interface IButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -13,6 +13,7 @@ const variantToClass: Record<Variant, string> = {
   primary: "bg-darkYellow text-white",
   info: "bg-lightBlue text-white",
   danger: "bg-red text-white",
+  ghost: ""
 };
 
 const Button = ({

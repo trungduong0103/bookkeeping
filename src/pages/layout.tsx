@@ -1,5 +1,21 @@
+import Link from "next/link";
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex flex-col gap-3 max-w-[100ch] m-auto py-10">{children}</main>
+    <>
+      <nav className="w-full m-auto py-5 px-10 bg-grey">
+        <ol className="flex gap-3">
+          <li className="underline font-bold">
+            <Link href="/authors">Authors</Link>
+          </li>
+          <li className="underline font-bold">
+            <Link href="/books">Books</Link>
+          </li>
+        </ol>
+      </nav>
+      <main className="flex flex-col gap-3 w-full md:max-w-[100ch] m-auto py-10">
+        {children}
+      </main>
+    </>
   );
 }

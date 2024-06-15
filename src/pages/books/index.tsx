@@ -17,10 +17,44 @@ export const getServerSideProps = (async () => {
   return { props: { books: books } };
 }) satisfies GetServerSideProps<{ books: IBook[] }>;
 
+const LoadingBooks = () => {
+  return Array.from({ length: 10 }).map((_, idx) => (
+    // biome-ignore lint/suspicious/noArrayIndexKey: idc
+    <tr key={idx} className="h-[65px]">
+      <td>
+        <div className="skeleton" />
+      </td>
+      <td>
+        <div className="skeleton" />
+      </td>
+      <td>
+        <div className="skeleton" />
+      </td>
+      <td>
+        <div className="skeleton" />
+      </td>
+      <td className="w-[65px]">
+        <div className="skeleton" />
+      </td>
+      <td className="w-[65px]">
+        <div className="skeleton" />
+      </td>
+    </tr>
+  ));
+};
+
 export default function BooksPage({
   books,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const [clientBooks, setClientBooks] = useState(books);
+  const [fetchingBooks, setFetchingBooks] = useState(false);
+  const [queryParams, setQueryParams] = useState({
+    page: 1,
+    limit: 10,
+    sortBy: "title",
+    order: "asc",
+  });
+
   if (!books) {
     return <div>Ooops could not load books...</div>;
   }
@@ -31,18 +65,52 @@ export default function BooksPage({
     setClientBooks(apiBooks);
   };
 
+  const handleGoNext = async () => {
+    setFetchingBooks(true);
+    try {
+      const nextPage = queryParams.page + 1;
+      setQueryParams((prev) => ({ ...prev, page: nextPage }));
+      const nextBooks = await fetchBooks({
+        sortBy: "title",
+        page: nextPage,
+      });
+      setClientBooks(nextBooks);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setFetchingBooks(false);
+    }
+  };
+
+  const handleGoBack = async () => {
+    setFetchingBooks(true);
+    try {
+      const previousPage = queryParams.page - 1;
+      setQueryParams((prev) => ({ ...prev, page: previousPage }));
+      const previousBooks = await fetchBooks({
+        sortBy: "title",
+        page: previousPage,
+      });
+      setClientBooks(previousBooks);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setFetchingBooks(false);
+    }
+  };
+
   return (
     <>
-      <div className="flex flex-row justify-between items-center">
+      <div className="w-full md:flex md:flex-row justify-between items-center">
         <h1 className="prose prose-2xl font-bold">Books</h1>
         <div>
           <TextInput placeholder="Search for a book" />
-          <Link href="books/add" className="ml-2">
+          <Link href="books/add/" className="ml-2">
             <Button>+ Add New Book</Button>
           </Link>
         </div>
       </div>
-      <table>
+      <table className="table-fixed">
         <thead>
           <tr>
             <th scope="col">ID</th>
@@ -54,29 +122,55 @@ export default function BooksPage({
           </tr>
         </thead>
         <tbody>
-          {clientBooks.map((book) => (
-            <tr key={book.id}>
-              <td>{book.id}</td>
-              <td className="capitalize">{book.title}</td>
-              <td>{book.authors.join(", ")}</td>
-              <td>{book.publicationYear}</td>
-              <td>
-                <Link href={`books/${book.id}`}>
-                  <Button variant="info">Edit</Button>
-                </Link>
-              </td>
-              <td>
-                <Button
-                  variant="danger"
-                  onClick={() => handleDeleteBook(book.id)}
-                  type="button"
-                >
-                  Delete
-                </Button>
-              </td>
-            </tr>
-          ))}
+          {fetchingBooks ? (
+            <LoadingBooks />
+          ) : (
+            clientBooks.map((book) => (
+              <tr key={book.id} className="h-[65px]">
+                <td>{book.id}</td>
+                <td title={book.title} className="capitalize overflow-hidden">
+                  {book.title}
+                </td>
+                <td className="overflow-hidden">{book.authors.join(", ")}</td>
+                <td>{book.publicationYear}</td>
+                <td className="w-[65px]">
+                  <Link href={`books/edit/${book.id}`}>
+                    <Button variant="info">Edit</Button>
+                  </Link>
+                </td>
+                <td className="w-[65px]">
+                  <Button
+                    variant="danger"
+                    onClick={() => handleDeleteBook(book.id)}
+                    type="button"
+                  >
+                    Delete
+                  </Button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
+        <tfoot>
+          <tr>
+            <td />
+            <td />
+            <td />
+            <td />
+            <td className="w-[65px]">
+              {queryParams.page !== 1 && (
+                <Button onClick={handleGoBack} variant="ghost">
+                  Previous
+                </Button>
+              )}
+            </td>
+            <td className="w-[65px]">
+              <Button onClick={handleGoNext} variant="ghost">
+                Next
+              </Button>
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </>
   );
