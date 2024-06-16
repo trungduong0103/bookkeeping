@@ -65,7 +65,11 @@ export default function AddBookPage({ authors }: TAddBookPageProps) {
   // biome-ignore lint/suspicious/noExplicitAny: bc im lazy
   const selectorOnchangeRef = useRef<(...event: any[]) => void>();
 
-  const onSubmit = async (data: Pick<IBook, "title" | "publicationYear"> & { authors: { id: string, fullName: string}[] }) => {
+  const onSubmit = async (
+    data: Pick<IBook, "title" | "publicationYear"> & {
+      authors: { id: string; fullName: string }[];
+    }
+  ) => {
     setCreating(true);
     try {
       const toastPromise = async () => {
@@ -124,8 +128,22 @@ export default function AddBookPage({ authors }: TAddBookPageProps) {
                         id: authors[selectedIdx].id,
                         fullName: authors[selectedIdx].fullName,
                       };
-                      setSelectedAuthors((prev) => [...prev, selectedAuthor]);
-                      onChange([...selectedAuthors, selectedAuthor]);
+                      setSelectedAuthors((prev) =>
+                        [...prev, selectedAuthor].filter(
+                          (obj1, i, arr2) =>
+                            arr2.findIndex(
+                              (obj2) => obj2.fullName === obj1.fullName
+                            ) === i
+                        )
+                      );
+                      onChange(
+                        [...selectedAuthors, selectedAuthor].filter(
+                          (obj1, i, arr2) =>
+                            arr2.findIndex(
+                              (obj2) => obj2.fullName === obj1.fullName
+                            ) === i
+                        )
+                      );
                     }}
                     options={authors.map((author) => ({
                       key: author.id,

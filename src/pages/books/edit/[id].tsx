@@ -25,9 +25,20 @@ export const getServerSideProps = (async (context) => {
 
 const authorSchema = object()
   .shape({
-    title: string().required("Title is required"),
-    authors: array().of(string().required()).required(),
-    publicationYear: number().integer().positive().required(),
+    title: string().required("Title is required."),
+    authors: array()
+      .of(
+        object().shape({
+          id: number().required(),
+          fullName: string().required(),
+        })
+      )
+      .required()
+      .required("At least an author is required."),
+    publicationYear: number()
+      .integer()
+      .positive()
+      .required("Publication Year is required."),
   })
   .required();
 
@@ -58,7 +69,9 @@ export default function BookPage({ book, authors }: TBookPageProps) {
     },
   });
   const [clientBook, setClientBook] = useState(book);
-  const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
+  const [selectedAuthors, setSelectedAuthors] = useState<
+    Pick<IAuthor, "id" | "fullName">[]
+  >([]);
   const [updating, setUpdating] = useState(false);
   // cheat to update on change without controller
   // biome-ignore lint/suspicious/noExplicitAny: bc im lazy
@@ -135,12 +148,25 @@ export default function BookPage({ book, authors }: TBookPageProps) {
                       className="w-[250px]"
                       {...others}
                       onChange={(e) => {
+                        const selectedIdx = e.target.value as unknown as number;
+                        const selectedAuthor = {
+                          id: authors[selectedIdx].id,
+                          fullName: authors[selectedIdx].fullName,
+                        };
                         setSelectedAuthors((prev) =>
-                          Array.from(new Set([...prev, e.target.value]))
+                          [...prev, selectedAuthor].filter(
+                            (obj1, i, arr2) =>
+                              arr2.findIndex(
+                                (obj2) => obj2.fullName === obj1.fullName
+                              ) === i
+                          )
                         );
                         onChange(
-                          Array.from(
-                            new Set([...selectedAuthors, e.target.value])
+                          [...selectedAuthors, selectedAuthor].filter(
+                            (obj1, i, arr2) =>
+                              arr2.findIndex(
+                                (obj2) => obj2.fullName === obj1.fullName
+                              ) === i
                           )
                         );
                       }}
@@ -167,16 +193,16 @@ export default function BookPage({ book, authors }: TBookPageProps) {
             Selected Authors:
           </p>
           <div className="flex flex-row flex-wrap gap-2">
-            {selectedAuthors.map((name) => (
+            {selectedAuthors.map((author) => (
               <AuthorChip
-                key={name}
-                authorName={name}
+                key={author.id}
+                authorName={author.fullName}
                 onRemove={(author) => {
                   setSelectedAuthors((prev) =>
-                    prev.filter((curr) => curr !== author)
+                    prev.filter((curr) => curr.fullName !== author)
                   );
                   selectorOnchangeRef.current?.(
-                    selectedAuthors.filter((curr) => curr !== author)
+                    selectedAuthors.filter((curr) => curr.fullName !== author)
                   );
                 }}
               />

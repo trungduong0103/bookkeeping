@@ -68,7 +68,7 @@ export default function BooksPage({
         loading: "Deleting book...",
         success: "Book deleted!",
         error: "Could not delete book, please try again.",
-      })
+      });
     } catch (err) {
       console.error(err);
     } finally {
@@ -79,7 +79,8 @@ export default function BooksPage({
   const handleChangePage = async (type: "prev" | "next") => {
     setFetchingBooks(true);
     try {
-      const page = type === "prev" ? queryParams.page - 1 : queryParams.page + 1;
+      const page =
+        type === "prev" ? queryParams.page - 1 : queryParams.page + 1;
       setQueryParams((prev) => ({ ...prev, page }));
       const newBooks = await fetchBooks({ page });
       setClientBooks(newBooks);
@@ -90,8 +91,16 @@ export default function BooksPage({
     }
   };
 
-  if (!books) {
-    return <div>Ooops could not load books...</div>;
+  if (!clientBooks || !clientBooks.length) {
+    return (
+      <div>
+        There aren&apos;t any books yet.{" "}
+        <Link className="underline" href="books/add">
+          Add a new book
+        </Link>{" "}
+        to see it here.
+      </div>
+    );
   }
 
   return (

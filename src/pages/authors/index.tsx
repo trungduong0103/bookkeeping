@@ -78,7 +78,8 @@ export default function AuthorsPage({
   const handleChangePage = async (type: "prev" | "next") => {
     setFetchingAuthors(true);
     try {
-      const page = type === "prev" ? queryParams.page - 1 : queryParams.page + 1;
+      const page =
+        type === "prev" ? queryParams.page - 1 : queryParams.page + 1;
       setQueryParams((prev) => ({ ...prev, page }));
       const newAuthors = await fetchAuthors({ page });
       setClientAuthors(newAuthors);
@@ -89,8 +90,16 @@ export default function AuthorsPage({
     }
   };
 
-  if (!authors) {
-    return <div>Oops could not load authors...</div>;
+  if (!clientAuthors || !clientAuthors.length) {
+    return (
+      <div>
+        There aren&apos;t any authors yet.{" "}
+        <Link className="underline" href="authors/add">
+          Add a new author
+        </Link>{" "}
+        to see it here.
+      </div>
+    );
   }
 
   return (
@@ -98,7 +107,7 @@ export default function AuthorsPage({
       <div className="w-full md:flex md:flex-row justify-between items-center">
         <h1 className="prose prose-2xl font-bold">Authors</h1>
         <Link href="authors/add" className="ml-2">
-          <Button>+ Add New Author</Button>
+          <Button>Add New Author</Button>
         </Link>
       </div>
       <table>

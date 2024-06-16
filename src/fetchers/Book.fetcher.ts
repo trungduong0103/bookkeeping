@@ -76,12 +76,12 @@ export const fetchBook = async (bookId: string): Promise<IBook> => {
   }
 };
 
-export const updateBook = async (bookId: string, data: Partial<IBook>) => {
+export const updateBook = async (bookId: string, data: Pick<IBook, "title" | "publicationYear" & { authors: { id: string, fullName: string}[] }>) => {
   try {
     const response = await fetch(`${BASE_URL}/${bookId}`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, authors: data.authors.map(({ fullName }) => fullName) }),
     });
     if (!response.ok) {
       return Promise.reject(response);

@@ -6,7 +6,7 @@ export const createAuthor = async (fullName: string): Promise<void> => {
     const response = await fetch(BASE_URL, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ fullName }),
+      body: JSON.stringify({ fullName, numberOfBooks: 0 }),
     });
     if (!response.ok) {
       return Promise.reject(response);
